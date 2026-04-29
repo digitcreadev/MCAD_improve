@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import List
 
-from .models000 import SessionEvaluationLogEntry
+from .models import SessionEvaluationLogEntry
 
 
 class LogStore:

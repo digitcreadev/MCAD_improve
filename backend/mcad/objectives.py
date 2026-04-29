@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 
 import yaml
 
-from .models000 import Objective
+from .models import Objective
 
 _OBJECTIVES: Dict[str, Objective] = {}
 _OBJECTIVES_YAML_PATH: Optional[str] = None

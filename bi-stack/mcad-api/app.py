@@ -759,7 +759,8 @@ def eval_query(payload: EvalRequest):
             state = SESSION_STORE.create_session_with_id(session_id=session_id, objective_id=objective_id, dw_id=dw_id)
         else:
             state = SESSION_STORE.create_session(objective_id=objective_id, dw_id=dw_id)
-
+            session_id = state.session_id
+    session_id = str(getattr(state, 'session_id', session_id))
     # 4) real engine call
     req = EvaluateWithObjectiveAndSessionRequest(session_id=session_id, objective_id=objective_id, qp=qp)
     try:
@@ -830,28 +831,6 @@ def eval_query(payload: EvalRequest):
             return x.dict()
         return x
 
-    try:
-        current_state = SESSION_STORE.get_session(session_id)
-        _append_ui_history_entry(
-            SESSION_STORE,
-            current_state,
-            objective_id=objective_id,
-            mdx=payload.mdx,
-            phi=phi,
-            delta_phi_t=float(delta_phi_t or 0.0),
-            decision=decision,
-            decision_reason_code=str(getattr(out, "decision_reason_code", "") or ""),
-            decision_reason=str(getattr(out, "decision_reason", "") or ""),
-            query_digest=str(getattr(out, "query_digest", "") or hashlib.sha1(payload.mdx.encode("utf-8")).hexdigest()[:16]),
-            newly_total=list(getattr(out, "newly_contributed_constraints_total", []) or []),
-            newly_partial=list(getattr(out, "newly_contributed_constraints_partial", []) or []),
-            gained_resource_ids=list(getattr(out, "gained_resource_ids", []) or []),
-            calc_total=list(getattr(out, "calculable_constraints_total", []) or []),
-            calc_partial=list(getattr(out, "calculable_constraints_partial", []) or []),
-            covered_constraints=list(getattr(out, "covered_constraints", []) or []),
-        )
-    except Exception:
-        pass
 
     return EvalResponse(
         decision=decision,

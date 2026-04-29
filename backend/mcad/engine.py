@@ -265,7 +265,7 @@ def evaluate_with_objective_and_session(
       - minimally linked back to the graph and to a snapshot,
       - without claiming full lifecycle-aware graph governance.
     """
-    _ = get_objective(payload.objective_id)
+    objective = get_objective(payload.objective_id)
     state = SESSION_STORE.get_session(payload.session_id)
     step_idx = int(state.step_index) + 1
 

@@ -5,7 +5,7 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException
 
-from mcad.models000 import Objective
+from mcad.models import Objective
 from mcad.objectives import (
     list_objectives,
     get_objective,

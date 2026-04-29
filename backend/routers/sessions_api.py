@@ -5,8 +5,8 @@ from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
-from mcad.models000 import SessionState
-from mcad.session_store0 import SESSION_STORE
+from mcad.models import SessionState
+from mcad.session_store import SESSION_STORE
 from mcad.objectives import get_objective
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
