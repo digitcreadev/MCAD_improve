@@ -1,0 +1,179 @@
+objectives:
+- id: OHF_NORD
+  name: Health Food Nord 1998
+  description: 'Objectif stratégique illustratif aligné sur l''article MCAD : suivre
+    la marge, les ruptures et la croissance du chiffre d''affaires pour la catégorie
+    Health Food en région Nord en 1998, avec comparaison à 1997 pour la croissance.'
+  kpis:
+  - KPI_MARGIN_RATE
+  - KPI_STOCKOUT_RATE
+  - KPI_CA_GROWTH
+  constraints:
+  - id: c1
+    kpi_id: KPI_MARGIN_RATE
+    description: Marge% Health Food / Nord / 1998 supérieure ou égale à 18%.
+    weight: 1.0
+    requirement_sets:
+    - - NV_MARGIN_HF_NORTH_1998_MONTH
+    virtual_nodes:
+    - id: NV_MARGIN_HF_NORTH_1998_MONTH
+      fact: Sales
+      grain:
+      - Time.Month
+      - Product.Category
+      measure: Margin%
+      aggregator: AVG
+      unit: PERCENT
+      slicers:
+        Product.Category: Health Food
+        Store.Region: North
+        Time.Year: '1998'
+      window_start: '1998-01-01'
+      window_end: '1998-12-31'
+  - id: c2
+    kpi_id: KPI_STOCKOUT_RATE
+    description: Taux de rupture Health Food / Nord / 1998 inférieur ou égal à 3%.
+    weight: 1.0
+    requirement_sets:
+    - - NV_STOCKOUT_HF_NORTH_1998_STORE
+    virtual_nodes:
+    - id: NV_STOCKOUT_HF_NORTH_1998_STORE
+      fact: Sales
+      grain:
+      - Store.Store
+      - Product.Category
+      measure: StockoutRate
+      aggregator: AVG
+      unit: PERCENT
+      slicers:
+        Product.Category: Health Food
+        Store.Region: North
+        Time.Year: '1998'
+      window_start: '1998-01-01'
+      window_end: '1998-12-31'
+  - id: c3
+    kpi_id: KPI_CA_GROWTH
+    description: Croissance du chiffre d'affaires Health Food / Nord entre 1997 et
+      1998 supérieure ou égale à 5%.
+    weight: 1.0
+    requirement_sets:
+    - - NV_CA_HF_NORTH_1997_MONTH
+      - NV_CA_HF_NORTH_1998_MONTH
+    virtual_nodes:
+    - id: NV_CA_HF_NORTH_1997_MONTH
+      fact: Sales
+      grain:
+      - Time.Month
+      - Product.Category
+      measure: Store Sales
+      aggregator: SUM
+      unit: CURRENCY
+      slicers:
+        Product.Category: Health Food
+        Store.Region: North
+        Time.Year: '1997'
+      window_start: '1997-01-01'
+      window_end: '1997-12-31'
+    - id: NV_CA_HF_NORTH_1998_MONTH
+      fact: Sales
+      grain:
+      - Time.Month
+      - Product.Category
+      measure: Store Sales
+      aggregator: SUM
+      unit: CURRENCY
+      slicers:
+        Product.Category: Health Food
+        Store.Region: North
+        Time.Year: '1998'
+      window_start: '1998-01-01'
+      window_end: '1998-12-31'
+- id: OAW_BIKES_EUROPE
+  name: AdventureWorks Bikes Europe 2013
+  description: 'Second objectif inter-dataset pour l''évaluation MCAD : suivre la
+    marge, les retours et la croissance des ventes pour la catégorie Bikes en Europe
+    sur AdventureWorks, avec comparaison 2012-2013 pour la croissance.'
+  kpis:
+  - KPI_AW_MARGIN_RATE
+  - KPI_AW_RETURN_RATE
+  - KPI_AW_SALES_GROWTH
+  constraints:
+  - id: aw_c1
+    kpi_id: KPI_AW_MARGIN_RATE
+    description: Marge% Bikes / Europe / 2013 supérieure ou égale à 20%.
+    weight: 1.0
+    requirement_sets:
+    - - NV_AW_MARGIN_BIKES_EUROPE_2013_MONTH
+    virtual_nodes:
+    - id: NV_AW_MARGIN_BIKES_EUROPE_2013_MONTH
+      fact: Adventure Works Sales
+      grain:
+      - Date.Month
+      - Product.Category
+      measure: Gross Margin%
+      aggregator: AVG
+      unit: PERCENT
+      slicers:
+        Product.Category: Bikes
+        SalesTerritory.Region: Europe
+        Date.Year: '2013'
+      window_start: '2013-01-01'
+      window_end: '2013-12-31'
+  - id: aw_c2
+    kpi_id: KPI_AW_RETURN_RATE
+    description: Taux de retour Bikes / Europe / 2013 inférieur ou égal à 2%.
+    weight: 1.0
+    requirement_sets:
+    - - NV_AW_RETURN_BIKES_EUROPE_2013_RESELLER
+    virtual_nodes:
+    - id: NV_AW_RETURN_BIKES_EUROPE_2013_RESELLER
+      fact: Adventure Works Sales
+      grain:
+      - Reseller.Reseller
+      - Product.Category
+      measure: ReturnRate
+      aggregator: AVG
+      unit: PERCENT
+      slicers:
+        Product.Category: Bikes
+        SalesTerritory.Region: Europe
+        Date.Year: '2013'
+      window_start: '2013-01-01'
+      window_end: '2013-12-31'
+  - id: aw_c3
+    kpi_id: KPI_AW_SALES_GROWTH
+    description: Croissance des ventes Bikes / Europe entre 2012 et 2013 supérieure
+      ou égale à 8%.
+    weight: 1.0
+    requirement_sets:
+    - - NV_AW_SALES_BIKES_EUROPE_2012_MONTH
+      - NV_AW_SALES_BIKES_EUROPE_2013_MONTH
+    virtual_nodes:
+    - id: NV_AW_SALES_BIKES_EUROPE_2012_MONTH
+      fact: Adventure Works Sales
+      grain:
+      - Date.Month
+      - Product.Category
+      measure: Sales Amount
+      aggregator: SUM
+      unit: CURRENCY
+      slicers:
+        Product.Category: Bikes
+        SalesTerritory.Region: Europe
+        Date.Year: '2012'
+      window_start: '2012-01-01'
+      window_end: '2012-12-31'
+    - id: NV_AW_SALES_BIKES_EUROPE_2013_MONTH
+      fact: Adventure Works Sales
+      grain:
+      - Date.Month
+      - Product.Category
+      measure: Sales Amount
+      aggregator: SUM
+      unit: CURRENCY
+      slicers:
+        Product.Category: Bikes
+        SalesTerritory.Region: Europe
+        Date.Year: '2013'
+      window_start: '2013-01-01'
+      window_end: '2013-12-31'

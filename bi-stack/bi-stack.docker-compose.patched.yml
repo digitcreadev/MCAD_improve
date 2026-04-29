@@ -1,0 +1,47 @@
+services:
+  emondrian:
+    build:
+      context: ./emondrian
+    ports:
+      - "8081:8080"
+
+  pivot4j:
+    build:
+      context: ./pivot4j
+    container_name: pivot4j
+    ports:
+      - "8090:8080"
+    depends_on:
+      - emondrian
+      - mcad-proxy
+
+  mcad-api:
+    build:
+      context: ..
+      dockerfile: bi-stack/mcad-api/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend:/app/backend:ro
+      - mcad_api_data:/app/data
+    environment:
+      MCAD_THRESHOLD_DEFAULT: "0.60"
+      PYTHONPATH: /app/backend:/app
+      MCAD_OBJECTIVES_YAML: /app/backend/objectives.yaml
+      MCAD_OBJECTIVES_FALLBACK_YAML: /app/backend/config/objectives.yaml
+
+  mcad-proxy:
+    build: ./mcad-proxy
+    depends_on:
+      - emondrian
+      - mcad-api
+    ports:
+      - "9000:9000"
+    environment:
+      UPSTREAM_XMLA: http://emondrian:8080/emondrian/xmla
+      MCAD_EVAL_URL: http://mcad-api:8000/eval
+      MCAD_CKG_URL: http://mcad-api:8000/ckg/update
+    command: ["uvicorn","app:app","--host","0.0.0.0","--port","9000","--log-level","info","--access-log"]
+
+volumes:
+  mcad_api_data:

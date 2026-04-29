@@ -1,0 +1,254 @@
+# backend/harness/scenarios_adventureworks.yaml
+#
+# Second dataset campaign for AdventureWorks-like schema.
+# Objective: OAW_BIKES_EUROPE
+#   aw_c1 = gross margin Bikes / Europe / 2013
+#   aw_c2 = return rate Bikes / Europe / 2013
+#   aw_c3 = sales growth Bikes / Europe / 2012-2013
+schema_version: 3
+objective_id: OAW_BIKES_EUROPE
+dw_id: ADVENTUREWORKS
+scenarios:
+  - id: aw_happy_guided_article_short
+    label: Happy – parcours guidé AdventureWorks (aw_c1 → aw_c2 → aw_c3)
+    type: happy
+    steps:
+      - name: AW_Q1_margin_month
+        description: Gross Margin% Bikes / Europe / 2013 par mois.
+        oracle_allow: true
+        oracle_ceval: [aw_c1]
+        qp:
+          query_spec:
+            cube: Adventure Works Sales
+            measures: [Gross Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Date.Month, Product.Category]
+            slicers:
+              Product.Category: Bikes
+              SalesTerritory.Region: Europe
+              Date.Year: "2013"
+            window_start: "2013-01-01"
+            window_end: "2013-12-31"
+      - name: AW_Q2_return_reseller
+        description: ReturnRate Bikes / Europe / 2013 par revendeur.
+        oracle_allow: true
+        oracle_ceval: [aw_c2]
+        qp:
+          query_spec:
+            cube: Adventure Works Sales
+            measures: [ReturnRate]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Reseller.Reseller, Product.Category]
+            slicers:
+              Product.Category: Bikes
+              SalesTerritory.Region: Europe
+              Date.Year: "2013"
+            window_start: "2013-01-01"
+            window_end: "2013-12-31"
+      - name: AW_Q3_sales_growth
+        description: Sales Amount Bikes / Europe / 2012-2013 par mois.
+        oracle_allow: true
+        oracle_ceval: [aw_c3]
+        qp:
+          query_spec:
+            cube: Adventure Works Sales
+            measures: [Sales Amount]
+            aggregators: [SUM]
+            units: [CURRENCY]
+            group_by: [Date.Month, Product.Category]
+            slicers:
+              Product.Category: Bikes
+              SalesTerritory.Region: Europe
+            time_members: ["2012", "2013"]
+            window_start: "2012-01-01"
+            window_end: "2013-12-31"
+
+  - id: aw_happy_guided_reordered
+    label: Happy – même objectif AdventureWorks mais ordre différent
+    type: happy
+    steps:
+      - name: AW_Q1_sales_growth
+        description: Croissance des ventes avant marge et retours.
+        oracle_allow: true
+        oracle_ceval: [aw_c3]
+        qp:
+          query_spec:
+            cube: Adventure Works Sales
+            measures: [Sales Amount]
+            aggregators: [SUM]
+            units: [CURRENCY]
+            group_by: [Date.Month, Product.Category]
+            slicers:
+              Product.Category: Bikes
+              SalesTerritory.Region: Europe
+            time_members: ["2012", "2013"]
+            window_start: "2012-01-01"
+            window_end: "2013-12-31"
+      - name: AW_Q2_margin_month
+        description: Gross Margin% Bikes / Europe / 2013 par mois.
+        oracle_allow: true
+        oracle_ceval: [aw_c1]
+        qp:
+          query_spec:
+            cube: Adventure Works Sales
+            measures: [Gross Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Date.Month, Product.Category]
+            slicers:
+              Product.Category: Bikes
+              SalesTerritory.Region: Europe
+              Date.Year: "2013"
+            window_start: "2013-01-01"
+            window_end: "2013-12-31"
+      - name: AW_Q3_return_reseller
+        description: ReturnRate Bikes / Europe / 2013 par revendeur.
+        oracle_allow: true
+        oracle_ceval: [aw_c2]
+        qp:
+          query_spec:
+            cube: Adventure Works Sales
+            measures: [ReturnRate]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Reseller.Reseller, Product.Category]
+            slicers:
+              Product.Category: Bikes
+              SalesTerritory.Region: Europe
+              Date.Year: "2013"
+            window_start: "2013-01-01"
+            window_end: "2013-12-31"
+
+  - id: aw_border_growth_2013_only
+    label: Border – croissance AW partielle 2013 seulement
+    type: border
+    steps:
+      - name: AW_Q1_sales_2013_only
+        description: Sales Amount Bikes / Europe mais seulement 2013.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Adventure Works Sales
+            measures: [Sales Amount]
+            aggregators: [SUM]
+            units: [CURRENCY]
+            group_by: [Date.Month, Product.Category]
+            slicers:
+              Product.Category: Bikes
+              SalesTerritory.Region: Europe
+              Date.Year: "2013"
+            window_start: "2013-01-01"
+            window_end: "2013-12-31"
+
+  - id: aw_border_margin_wrong_grain
+    label: Border – marge AW avec grain trop grossier
+    type: border
+    steps:
+      - name: AW_Q1_margin_quarter_only
+        description: Gross Margin% Bikes / Europe / 2013 par trimestre seulement.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Adventure Works Sales
+            measures: [Gross Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Date.Quarter]
+            slicers:
+              Product.Category: Bikes
+              SalesTerritory.Region: Europe
+              Date.Year: "2013"
+            window_start: "2013-01-01"
+            window_end: "2013-12-31"
+
+  - id: aw_border_return_missing_reseller
+    label: Border – retours AW sans grain revendeur
+    type: border
+    steps:
+      - name: AW_Q1_return_category_only
+        description: ReturnRate Bikes / Europe / 2013 sans détail revendeur.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Adventure Works Sales
+            measures: [ReturnRate]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Product.Category]
+            slicers:
+              Product.Category: Bikes
+              SalesTerritory.Region: Europe
+              Date.Year: "2013"
+            window_start: "2013-01-01"
+            window_end: "2013-12-31"
+
+  - id: aw_adversarial_wrong_region
+    label: Adversarial – bonne mesure mais mauvaise région AW
+    type: adversarial
+    steps:
+      - name: AW_Q1_margin_pacific
+        description: Gross Margin% Bikes / Pacific / 2013.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Adventure Works Sales
+            measures: [Gross Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Date.Month, Product.Category]
+            slicers:
+              Product.Category: Bikes
+              SalesTerritory.Region: Pacific
+              Date.Year: "2013"
+            window_start: "2013-01-01"
+            window_end: "2013-12-31"
+
+  - id: aw_adversarial_wrong_category
+    label: Adversarial – bonne mesure mais mauvaise catégorie AW
+    type: adversarial
+    steps:
+      - name: AW_Q1_margin_accessories
+        description: Gross Margin% Accessories / Europe / 2013.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Adventure Works Sales
+            measures: [Gross Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Date.Month, Product.Category]
+            slicers:
+              Product.Category: Accessories
+              SalesTerritory.Region: Europe
+              Date.Year: "2013"
+            window_start: "2013-01-01"
+            window_end: "2013-12-31"
+
+  - id: aw_adversarial_wrong_measure
+    label: Adversarial – bonne tranche AW mais mauvaise mesure
+    type: adversarial
+    steps:
+      - name: AW_Q1_sales_quantity
+        description: Sales Quantity Bikes / Europe / 2013.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Adventure Works Sales
+            measures: [Sales Quantity]
+            aggregators: [SUM]
+            units: [COUNT]
+            group_by: [Date.Month, Product.Category]
+            slicers:
+              Product.Category: Bikes
+              SalesTerritory.Region: Europe
+              Date.Year: "2013"
+            window_start: "2013-01-01"
+            window_end: "2013-12-31"

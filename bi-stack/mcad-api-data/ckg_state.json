@@ -1,0 +1,637 @@
+{
+  "nodes": {
+    "objective::O_MARGE_RUPTURE_1998": {
+      "type": "objective",
+      "name": "Optimisation marge et ruptures – Nord 1998",
+      "description": "Améliorer un indicateur 'marge/volume' et surveiller les ventes sur l'année 1998 (version FoodMart-compatible pour tests)."
+    },
+    "kpi::KPI_UNIT_SALES": {
+      "type": "kpi"
+    },
+    "kpi::KPI_STORE_SALES": {
+      "type": "kpi"
+    },
+    "kpi::KPI_PROFIT": {
+      "type": "kpi"
+    },
+    "constraint::c_unit_sales_1998": {
+      "type": "constraint",
+      "kpi_id": "KPI_UNIT_SALES",
+      "weight": 0.4,
+      "description": "Ventes unitaires (proxy volume) pour déclencher l'alignement avec les requêtes Pivot4J."
+    },
+    "nv::NV_unit_sales": {
+      "type": "virtual_node",
+      "fact": "Sales",
+      "grain": [],
+      "measure": "Unit Sales",
+      "aggregator": "sum",
+      "unit": "units",
+      "slicers": {},
+      "constraint_id": "c_unit_sales_1998",
+      "objective_id": "O_MARGE_RUPTURE_1998"
+    },
+    "fact::Sales": {
+      "type": "fact"
+    },
+    "measure::Unit Sales": {
+      "type": "measure"
+    },
+    "agg::sum": {
+      "type": "aggregator"
+    },
+    "unit::units": {
+      "type": "unit"
+    },
+    "constraint::c_store_sales_1998": {
+      "type": "constraint",
+      "kpi_id": "KPI_STORE_SALES",
+      "weight": 0.3,
+      "description": "Ventes magasin (proxy chiffre d'affaires)."
+    },
+    "nv::NV_store_sales": {
+      "type": "virtual_node",
+      "fact": "Sales",
+      "grain": [],
+      "measure": "Store Sales",
+      "aggregator": "sum",
+      "unit": "currency",
+      "slicers": {},
+      "constraint_id": "c_store_sales_1998",
+      "objective_id": "O_MARGE_RUPTURE_1998"
+    },
+    "measure::Store Sales": {
+      "type": "measure"
+    },
+    "unit::currency": {
+      "type": "unit"
+    },
+    "constraint::c_profit_1998": {
+      "type": "constraint",
+      "kpi_id": "KPI_PROFIT",
+      "weight": 0.3,
+      "description": "Profit (proxy marge) sur Sales."
+    },
+    "nv::NV_profit": {
+      "type": "virtual_node",
+      "fact": "Sales",
+      "grain": [],
+      "measure": "Profit",
+      "aggregator": "sum",
+      "unit": "currency",
+      "slicers": {},
+      "constraint_id": "c_profit_1998",
+      "objective_id": "O_MARGE_RUPTURE_1998"
+    },
+    "measure::Profit": {
+      "type": "measure"
+    },
+    "qp::S_0001::t001": {
+      "type": "query_plan",
+      "session_id": "S_0001",
+      "step_idx": 1,
+      "objective_id": "O_MARGE_RUPTURE_1998",
+      "kpi_id": null,
+      "cube": "Sales",
+      "measures": [
+        "Unit Sales"
+      ],
+      "group_by": [],
+      "slicers": {},
+      "analytics": [],
+      "ckg_tags": []
+    },
+    "session::S_0001": {
+      "type": "session"
+    },
+    "qp::S_0001::t002": {
+      "type": "query_plan",
+      "session_id": "S_0001",
+      "step_idx": 2,
+      "objective_id": "O_MARGE_RUPTURE_1998",
+      "kpi_id": null,
+      "cube": "Sales",
+      "measures": [
+        "Store Cost",
+        "Store Sales",
+        "Unit Sales"
+      ],
+      "group_by": [],
+      "slicers": {},
+      "analytics": [],
+      "ckg_tags": []
+    },
+    "measure::Store Cost": {
+      "type": "measure"
+    },
+    "exec::S_0001::t002::89e7c2ea32bbe2e2::1774306536441": {
+      "type": "execution",
+      "mdx": "SELECT {[Measures].[Unit Sales], [Measures].[Store Sales], [Measures].[Store Cost]} ON COLUMNS, [Time].[Time].[Year].Members ON ROWS FROM [Sales]",
+      "fingerprint": "4dc236d628f543bf",
+      "response_digest": "89e7c2ea32bbe2e2",
+      "status_code": 200,
+      "elapsed_ms": 233,
+      "response_bytes": 13223,
+      "decision": "ALLOW",
+      "phi": 0.666667,
+      "threshold": 0.6,
+      "sat": 1.0,
+      "real": 0.6666666666666666,
+      "ceval": 0.6666666666666666,
+      "step_index": 2,
+      "query_spec": "{\"cube\": \"Sales\", \"measures\": [\"Store Cost\", \"Store Sales\", \"Unit Sales\"], \"group_by\": [], \"slicers\": {}, \"analytics\": []}",
+      "calculable_constraints": "[\"c_store_sales_1998\", \"c_unit_sales_1998\"]",
+      "ts": 1774306536441
+    },
+    "qp::S_0001::t003": {
+      "type": "query_plan",
+      "session_id": "S_0001",
+      "step_idx": 3,
+      "objective_id": "O_MARGE_RUPTURE_1998",
+      "kpi_id": null,
+      "cube": "Sales",
+      "measures": [
+        "Unit Sales"
+      ],
+      "group_by": [],
+      "slicers": {},
+      "analytics": [],
+      "ckg_tags": []
+    },
+    "qp::S_0001::t004": {
+      "type": "query_plan",
+      "session_id": "S_0001",
+      "step_idx": 4,
+      "objective_id": "O_MARGE_RUPTURE_1998",
+      "kpi_id": null,
+      "cube": "Sales",
+      "measures": [
+        "Unit Sales"
+      ],
+      "group_by": [],
+      "slicers": {},
+      "analytics": [],
+      "ckg_tags": []
+    },
+    "qp::S_0001::t005": {
+      "type": "query_plan",
+      "session_id": "S_0001",
+      "step_idx": 5,
+      "objective_id": "O_MARGE_RUPTURE_1998",
+      "kpi_id": null,
+      "cube": "Sales",
+      "measures": [
+        "Unit Sales"
+      ],
+      "group_by": [],
+      "slicers": {},
+      "analytics": [],
+      "ckg_tags": []
+    },
+    "qp::S_0001::t006": {
+      "type": "query_plan",
+      "session_id": "S_0001",
+      "step_idx": 6,
+      "objective_id": "O_MARGE_RUPTURE_1998",
+      "kpi_id": null,
+      "cube": "Sales",
+      "measures": [
+        "Unit Sales"
+      ],
+      "group_by": [],
+      "slicers": {},
+      "analytics": [],
+      "ckg_tags": []
+    },
+    "qp::S_0001::t007": {
+      "type": "query_plan",
+      "session_id": "S_0001",
+      "step_idx": 7,
+      "objective_id": "O_MARGE_RUPTURE_1998",
+      "kpi_id": null,
+      "cube": "Sales",
+      "measures": [
+        "Store Cost",
+        "Store Sales",
+        "Unit Sales"
+      ],
+      "group_by": [],
+      "slicers": {},
+      "analytics": [],
+      "ckg_tags": []
+    },
+    "exec::S_0001::t007::89e7c2ea32bbe2e2::1774307027385": {
+      "type": "execution",
+      "mdx": "SELECT {[Measures].[Unit Sales], [Measures].[Store Sales], [Measures].[Store Cost]} ON COLUMNS, [Time].[Time].[Year].Members ON ROWS FROM [Sales]",
+      "fingerprint": "4dc236d628f543bf",
+      "response_digest": "89e7c2ea32bbe2e2",
+      "status_code": 200,
+      "elapsed_ms": 105,
+      "response_bytes": 13223,
+      "decision": "ALLOW",
+      "phi": 0.666667,
+      "threshold": 0.6,
+      "sat": 1.0,
+      "real": 0.6666666666666666,
+      "ceval": 0.6666666666666666,
+      "step_index": 7,
+      "query_spec": "{\"cube\": \"Sales\", \"measures\": [\"Store Cost\", \"Store Sales\", \"Unit Sales\"], \"group_by\": [], \"slicers\": {}, \"analytics\": []}",
+      "calculable_constraints": "[\"c_store_sales_1998\", \"c_unit_sales_1998\"]",
+      "ts": 1774307027385
+    },
+    "qp::S_0001::t008": {
+      "type": "query_plan",
+      "session_id": "S_0001",
+      "step_idx": 8,
+      "objective_id": "O_MARGE_RUPTURE_1998",
+      "kpi_id": null,
+      "cube": "Sales",
+      "measures": [
+        "Store Sales",
+        "Unit Sales"
+      ],
+      "group_by": [],
+      "slicers": {},
+      "analytics": [],
+      "ckg_tags": []
+    },
+    "exec::S_0001::t008::3542785c6384a5aa::1774307053061": {
+      "type": "execution",
+      "mdx": "SELECT {[Measures].[Unit Sales], [Measures].[Store Sales]} ON COLUMNS, [Time].[Time].[Year].Members ON ROWS FROM [Sales]",
+      "fingerprint": "06c010a11e4d5175",
+      "response_digest": "3542785c6384a5aa",
+      "status_code": 200,
+      "elapsed_ms": 158,
+      "response_bytes": 12660,
+      "decision": "ALLOW",
+      "phi": 0.666667,
+      "threshold": 0.6,
+      "sat": 1.0,
+      "real": 0.6666666666666666,
+      "ceval": 0.6666666666666666,
+      "step_index": 8,
+      "query_spec": "{\"cube\": \"Sales\", \"measures\": [\"Store Sales\", \"Unit Sales\"], \"group_by\": [], \"slicers\": {}, \"analytics\": []}",
+      "calculable_constraints": "[\"c_store_sales_1998\", \"c_unit_sales_1998\"]",
+      "ts": 1774307053061
+    }
+  },
+  "edges": {
+    "objective::O_MARGE_RUPTURE_1998": {
+      "kpi::KPI_UNIT_SALES": {
+        "weight": 1.0,
+        "rel": "HAS_KPI"
+      },
+      "kpi::KPI_STORE_SALES": {
+        "weight": 1.0,
+        "rel": "HAS_KPI"
+      },
+      "kpi::KPI_PROFIT": {
+        "weight": 1.0,
+        "rel": "HAS_KPI"
+      },
+      "constraint::c_unit_sales_1998": {
+        "weight": 1.0,
+        "rel": "HAS_CONSTRAINT"
+      },
+      "constraint::c_store_sales_1998": {
+        "weight": 1.0,
+        "rel": "HAS_CONSTRAINT"
+      },
+      "constraint::c_profit_1998": {
+        "weight": 1.0,
+        "rel": "HAS_CONSTRAINT"
+      }
+    },
+    "kpi::KPI_UNIT_SALES": {
+      "constraint::c_unit_sales_1998": {
+        "weight": 1.0,
+        "rel": "KPI_CONSTRAINS"
+      }
+    },
+    "kpi::KPI_STORE_SALES": {
+      "constraint::c_store_sales_1998": {
+        "weight": 1.0,
+        "rel": "KPI_CONSTRAINS"
+      }
+    },
+    "kpi::KPI_PROFIT": {
+      "constraint::c_profit_1998": {
+        "weight": 1.0,
+        "rel": "KPI_CONSTRAINS"
+      }
+    },
+    "constraint::c_unit_sales_1998": {
+      "nv::NV_unit_sales": {
+        "weight": 1.0,
+        "rel": "REQUIRES_NV"
+      }
+    },
+    "nv::NV_unit_sales": {
+      "fact::Sales": {
+        "weight": 1.0,
+        "rel": "NV_FACT"
+      },
+      "measure::Unit Sales": {
+        "weight": 1.0,
+        "rel": "NV_MEASURE"
+      },
+      "agg::sum": {
+        "weight": 1.0,
+        "rel": "NV_AGG"
+      },
+      "unit::units": {
+        "weight": 1.0,
+        "rel": "NV_UNIT"
+      }
+    },
+    "constraint::c_store_sales_1998": {
+      "nv::NV_store_sales": {
+        "weight": 1.0,
+        "rel": "REQUIRES_NV"
+      }
+    },
+    "nv::NV_store_sales": {
+      "fact::Sales": {
+        "weight": 1.0,
+        "rel": "NV_FACT"
+      },
+      "measure::Store Sales": {
+        "weight": 1.0,
+        "rel": "NV_MEASURE"
+      },
+      "agg::sum": {
+        "weight": 1.0,
+        "rel": "NV_AGG"
+      },
+      "unit::currency": {
+        "weight": 1.0,
+        "rel": "NV_UNIT"
+      }
+    },
+    "constraint::c_profit_1998": {
+      "nv::NV_profit": {
+        "weight": 1.0,
+        "rel": "REQUIRES_NV"
+      }
+    },
+    "nv::NV_profit": {
+      "fact::Sales": {
+        "weight": 1.0,
+        "rel": "NV_FACT"
+      },
+      "measure::Profit": {
+        "weight": 1.0,
+        "rel": "NV_MEASURE"
+      },
+      "agg::sum": {
+        "weight": 1.0,
+        "rel": "NV_AGG"
+      },
+      "unit::currency": {
+        "weight": 1.0,
+        "rel": "NV_UNIT"
+      }
+    },
+    "qp::S_0001::t001": {
+      "fact::Sales": {
+        "weight": 1.0,
+        "rel": "QP_FACT"
+      },
+      "measure::Unit Sales": {
+        "weight": 1.0,
+        "rel": "QP_MEASURE"
+      },
+      "nv::NV_unit_sales": {
+        "weight": 1.0,
+        "rel": "REALIZES"
+      }
+    },
+    "session::S_0001": {
+      "objective::O_MARGE_RUPTURE_1998": {
+        "weight": 8.0,
+        "rel": "EVALUATES"
+      },
+      "constraint::c_unit_sales_1998": {
+        "weight": 8.0,
+        "rel": "COVERS",
+        "t": 1
+      },
+      "constraint::c_store_sales_1998": {
+        "weight": 3.0,
+        "rel": "COVERS",
+        "t": 2
+      },
+      "exec::S_0001::t002::89e7c2ea32bbe2e2::1774306536441": {
+        "type": "HAS_EXECUTION"
+      },
+      "exec::S_0001::t007::89e7c2ea32bbe2e2::1774307027385": {
+        "type": "HAS_EXECUTION"
+      },
+      "exec::S_0001::t008::3542785c6384a5aa::1774307053061": {
+        "type": "HAS_EXECUTION"
+      }
+    },
+    "qp::S_0001::t002": {
+      "fact::Sales": {
+        "weight": 1.0,
+        "rel": "QP_FACT"
+      },
+      "measure::Store Cost": {
+        "weight": 1.0,
+        "rel": "QP_MEASURE"
+      },
+      "measure::Store Sales": {
+        "weight": 1.0,
+        "rel": "QP_MEASURE"
+      },
+      "measure::Unit Sales": {
+        "weight": 1.0,
+        "rel": "QP_MEASURE"
+      },
+      "nv::NV_unit_sales": {
+        "weight": 1.0,
+        "rel": "REALIZES"
+      },
+      "nv::NV_store_sales": {
+        "weight": 1.0,
+        "rel": "REALIZES"
+      }
+    },
+    "exec::S_0001::t002::89e7c2ea32bbe2e2::1774306536441": {
+      "objective::O_MARGE_RUPTURE_1998": {
+        "type": "FOR_OBJECTIVE"
+      },
+      "qp::S_0001::t002": {
+        "type": "EXECUTED_QP"
+      }
+    },
+    "qp::S_0001::t003": {
+      "fact::Sales": {
+        "weight": 1.0,
+        "rel": "QP_FACT"
+      },
+      "measure::Unit Sales": {
+        "weight": 1.0,
+        "rel": "QP_MEASURE"
+      },
+      "nv::NV_unit_sales": {
+        "weight": 1.0,
+        "rel": "REALIZES"
+      }
+    },
+    "qp::S_0001::t004": {
+      "fact::Sales": {
+        "weight": 1.0,
+        "rel": "QP_FACT"
+      },
+      "measure::Unit Sales": {
+        "weight": 1.0,
+        "rel": "QP_MEASURE"
+      },
+      "nv::NV_unit_sales": {
+        "weight": 1.0,
+        "rel": "REALIZES"
+      }
+    },
+    "qp::S_0001::t005": {
+      "fact::Sales": {
+        "weight": 1.0,
+        "rel": "QP_FACT"
+      },
+      "measure::Unit Sales": {
+        "weight": 1.0,
+        "rel": "QP_MEASURE"
+      },
+      "nv::NV_unit_sales": {
+        "weight": 1.0,
+        "rel": "REALIZES"
+      }
+    },
+    "qp::S_0001::t006": {
+      "fact::Sales": {
+        "weight": 1.0,
+        "rel": "QP_FACT"
+      },
+      "measure::Unit Sales": {
+        "weight": 1.0,
+        "rel": "QP_MEASURE"
+      },
+      "nv::NV_unit_sales": {
+        "weight": 1.0,
+        "rel": "REALIZES"
+      }
+    },
+    "qp::S_0001::t007": {
+      "fact::Sales": {
+        "weight": 1.0,
+        "rel": "QP_FACT"
+      },
+      "measure::Store Cost": {
+        "weight": 1.0,
+        "rel": "QP_MEASURE"
+      },
+      "measure::Store Sales": {
+        "weight": 1.0,
+        "rel": "QP_MEASURE"
+      },
+      "measure::Unit Sales": {
+        "weight": 1.0,
+        "rel": "QP_MEASURE"
+      },
+      "nv::NV_unit_sales": {
+        "weight": 1.0,
+        "rel": "REALIZES"
+      },
+      "nv::NV_store_sales": {
+        "weight": 1.0,
+        "rel": "REALIZES"
+      }
+    },
+    "exec::S_0001::t007::89e7c2ea32bbe2e2::1774307027385": {
+      "objective::O_MARGE_RUPTURE_1998": {
+        "type": "FOR_OBJECTIVE"
+      },
+      "qp::S_0001::t007": {
+        "type": "EXECUTED_QP"
+      }
+    },
+    "qp::S_0001::t008": {
+      "fact::Sales": {
+        "weight": 1.0,
+        "rel": "QP_FACT"
+      },
+      "measure::Store Sales": {
+        "weight": 1.0,
+        "rel": "QP_MEASURE"
+      },
+      "measure::Unit Sales": {
+        "weight": 1.0,
+        "rel": "QP_MEASURE"
+      },
+      "nv::NV_unit_sales": {
+        "weight": 1.0,
+        "rel": "REALIZES"
+      },
+      "nv::NV_store_sales": {
+        "weight": 1.0,
+        "rel": "REALIZES"
+      }
+    },
+    "exec::S_0001::t008::3542785c6384a5aa::1774307053061": {
+      "objective::O_MARGE_RUPTURE_1998": {
+        "type": "FOR_OBJECTIVE"
+      },
+      "qp::S_0001::t008": {
+        "type": "EXECUTED_QP"
+      }
+    }
+  },
+  "history": [],
+  "objectives": {
+    "O_MARGE_RUPTURE_1998": {
+      "id": "O_MARGE_RUPTURE_1998",
+      "kpis": [
+        "KPI_UNIT_SALES",
+        "KPI_STORE_SALES",
+        "KPI_PROFIT"
+      ],
+      "constraints": {
+        "c_unit_sales_1998": {
+          "id": "c_unit_sales_1998",
+          "kpi_id": "KPI_UNIT_SALES",
+          "weight": 0.4,
+          "description": "Ventes unitaires (proxy volume) pour déclencher l'alignement avec les requêtes Pivot4J.",
+          "virtual_nodes": [
+            "NV_unit_sales"
+          ]
+        },
+        "c_store_sales_1998": {
+          "id": "c_store_sales_1998",
+          "kpi_id": "KPI_STORE_SALES",
+          "weight": 0.3,
+          "description": "Ventes magasin (proxy chiffre d'affaires).",
+          "virtual_nodes": [
+            "NV_store_sales"
+          ]
+        },
+        "c_profit_1998": {
+          "id": "c_profit_1998",
+          "kpi_id": "KPI_PROFIT",
+          "weight": 0.3,
+          "description": "Profit (proxy marge) sur Sales.",
+          "virtual_nodes": [
+            "NV_profit"
+          ]
+        }
+      }
+    }
+  },
+  "session_coverage": {
+    "S_0001": {
+      "O_MARGE_RUPTURE_1998": [
+        "c_store_sales_1998",
+        "c_unit_sales_1998"
+      ]
+    }
+  }
+}

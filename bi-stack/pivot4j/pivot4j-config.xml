@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pivot4j-config>
+  <datasources>
+    <datasource>
+      <name>eMondrian XMLA</name>
+      <description>Pivot4J -> eMondrian via XMLA</description>
+      <connection-info>
+        <url>jdbc:xmla:</url>
+        <driverClass>org.olap4j.driver.xmla.XmlaOlap4jDriver</driverClass>
+        <properties>
+          <property name="Server">http://emondrian:8080/emondrian/xmla</property>
+          <property name="Catalog">FoodMart</property>
+          <property name="DataSourceName">Foodmart</property>
+        </properties>
+      </connection-info>
+    </datasource>
+
+    <datasource>
+      <name>FoodMart via MCAD</name>
+      <description>Pivot4J -> MCAD-proxy -> eMondrian</description>
+      <connection-info>
+        <url>jdbc:xmla:</url>
+        <driverClass>org.olap4j.driver.xmla.XmlaOlap4jDriver</driverClass>
+        <properties>
+          <property name="Server">http://mcad-proxy:9000/xmla</property>
+          <property name="Catalog">FoodMart</property>
+        </properties>
+      </connection-info>
+    </datasource>
+  </datasources>
+</pivot4j-config>
