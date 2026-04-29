@@ -7,9 +7,9 @@ import tempfile
 import unittest
 
 from backend.ckg.ckg_updater import CKGGraph
-from mcad.engine000 import evaluate_with_objective_and_session, get_evidence_store, replay_retained_evidence, reset_runtime_state
-from mcad.models000 import EvaluateWithObjectiveAndSessionRequest
-from mcad.session_store0 import SESSION_STORE
+from mcad.engine import evaluate_with_objective_and_session, get_evidence_store, replay_retained_evidence, reset_runtime_state
+from mcad.models import EvaluateWithObjectiveAndSessionRequest
+from mcad.session_store import SESSION_STORE
 
 
 class TestPalier3Governance(unittest.TestCase):
