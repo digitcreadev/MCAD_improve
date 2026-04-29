@@ -1,0 +1,397 @@
+# Robustness campaign for FoodMart / OHF_NORD
+schema_version: 4
+objective_id: OHF_NORD
+dw_id: FOODMART
+scenarios:
+  - id: rb_fm_clause_diagnostics
+    label: Robustness – clause diagnostics and recovery (FoodMart)
+    type: adversarial_sat
+    steps:
+      - name: RB_Q1_no_measure
+        description: Invalid query with no measure.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+      - name: RB_Q2_conflicting_region_alias
+        description: Contradictory region slicers using two aliases of the same logical dimension.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              region: South
+              Time.Year: "1998"
+            window_start: "1998-01-01"
+            window_end: "1998-12-31"
+      - name: RB_Q3_reversed_window
+        description: Same target, but with a reversed time window.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+            window_start: "1998-12-31"
+            window_end: "1998-01-01"
+      - name: RB_Q4_wrong_unit
+        description: Margin query with a currency unit instead of percent.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Margin%]
+            aggregators: [AVG]
+            units: [CURRENCY]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+            window_start: "1998-01-01"
+            window_end: "1998-12-31"
+      - name: RB_Q5_wrong_agg
+        description: Margin query with SUM instead of AVG.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Margin%]
+            aggregators: [SUM]
+            units: [PERCENT]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+            window_start: "1998-01-01"
+            window_end: "1998-12-31"
+      - name: RB_Q6_valid_margin
+        description: Canonical useful query restoring the correct margin view.
+        oracle_allow: true
+        oracle_ceval: [c1]
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+            window_start: "1998-01-01"
+            window_end: "1998-12-31"
+
+  - id: rb_fm_semantic_traps
+    label: Robustness – semantic traps before useful recovery (FoodMart)
+    type: adversarial_semantic
+    steps:
+      - name: RB_Q1_margin_south
+        description: Correct metric, wrong region.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: South
+              Time.Year: "1998"
+            window_start: "1998-01-01"
+            window_end: "1998-12-31"
+      - name: RB_Q2_stockout_1997
+        description: Correct KPI, wrong year.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [StockoutRate]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Store.Store, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1997"
+            window_start: "1997-01-01"
+            window_end: "1997-12-31"
+      - name: RB_Q3_growth_1998_only
+        description: Growth candidate with only one year available.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Store Sales]
+            aggregators: [SUM]
+            units: [CURRENCY]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+            window_start: "1998-01-01"
+            window_end: "1998-12-31"
+      - name: RB_Q4_sales_quantity
+        description: Good slice, but irrelevant measure.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Sales Quantity]
+            aggregators: [SUM]
+            units: [COUNT]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+            window_start: "1998-01-01"
+            window_end: "1998-12-31"
+      - name: RB_Q5_valid_growth
+        description: Canonical growth query over 1997-1998.
+        oracle_allow: true
+        oracle_ceval: [c3]
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Store Sales]
+            aggregators: [SUM]
+            units: [CURRENCY]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+            time_members: ["1997", "1998"]
+            window_start: "1997-01-01"
+            window_end: "1998-12-31"
+
+  - id: rb_fm_long_noisy_session
+    label: Robustness – long noisy analytical session (FoodMart)
+    type: stress_long
+    steps:
+      - name: RB_Q1_noise_sales_region
+        description: Sales by region and month, no product target.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Store Sales]
+            aggregators: [SUM]
+            units: [CURRENCY]
+            group_by: [Store.Region, Time.Month]
+            slicers:
+              Time.Year: "1998"
+      - name: RB_Q2_noise_margin_month
+        description: Margin by month without Health Food slice.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Time.Month]
+            slicers:
+              Store.Region: North
+              Time.Year: "1998"
+      - name: RB_Q3_conflicting_region_alias
+        description: Contradictory region aliases in mid-session.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Store Sales]
+            aggregators: [SUM]
+            units: [CURRENCY]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              region: South
+              Time.Year: "1998"
+      - name: RB_Q4_useful_margin
+        description: Useful margin query.
+        oracle_allow: true
+        oracle_ceval: [c1]
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+            window_start: "1998-01-01"
+            window_end: "1998-12-31"
+      - name: RB_Q5_border_stockout_missing_store
+        description: Stockout without store grain.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [StockoutRate]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+      - name: RB_Q6_useful_stockout
+        description: Useful stockout query.
+        oracle_allow: true
+        oracle_ceval: [c2]
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [StockoutRate]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Store.Store, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+            window_start: "1998-01-01"
+            window_end: "1998-12-31"
+      - name: RB_Q7_partial_growth
+        description: Growth candidate with only 1998.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Store Sales]
+            aggregators: [SUM]
+            units: [CURRENCY]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+            window_start: "1998-01-01"
+            window_end: "1998-12-31"
+      - name: RB_Q8_useful_growth
+        description: Useful growth query.
+        oracle_allow: true
+        oracle_ceval: [c3]
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Store Sales]
+            aggregators: [SUM]
+            units: [CURRENCY]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+            time_members: ["1997", "1998"]
+            window_start: "1997-01-01"
+            window_end: "1998-12-31"
+
+  - id: rb_fm_borderline_recovery
+    label: Robustness – borderline cases and recovery (FoodMart)
+    type: noisy_borderline
+    steps:
+      - name: RB_Q1_margin_quarter
+        description: Margin at quarter grain only.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Time.Quarter]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+      - name: RB_Q2_stockout_category
+        description: Stockout without store grain.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [StockoutRate]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+      - name: RB_Q3_wrong_category
+        description: Correct shape, wrong category.
+        oracle_allow: false
+        oracle_ceval: []
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Snack Foods
+              Store.Region: North
+              Time.Year: "1998"
+            window_start: "1998-01-01"
+            window_end: "1998-12-31"
+      - name: RB_Q4_valid_margin
+        description: Useful margin query.
+        oracle_allow: true
+        oracle_ceval: [c1]
+        qp:
+          query_spec:
+            cube: Sales
+            measures: [Margin%]
+            aggregators: [AVG]
+            units: [PERCENT]
+            group_by: [Time.Month, Product.Category]
+            slicers:
+              Product.Category: Health Food
+              Store.Region: North
+              Time.Year: "1998"
+            window_start: "1998-01-01"
+            window_end: "1998-12-31"

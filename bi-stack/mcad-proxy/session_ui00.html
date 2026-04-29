@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MCAD Session Manager</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#f7f8fb;color:#1f2937;margin:0;padding:18px}
+    .layout{display:grid;grid-template-columns:370px 1fr;gap:18px;max-width:1600px;margin:0 auto}
+    .stack{display:flex;flex-direction:column;gap:16px}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.05)}
+    h1,h2,h3{margin:0 0 10px 0}.muted{color:#6b7280;font-size:13px}.row{margin:10px 0}
+    label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+    input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid #d1d5db;font-size:14px;box-sizing:border-box}
+    button{cursor:pointer;background:#111827;color:#fff;border:none}.secondary{background:#fff;color:#111827;border:1px solid #d1d5db}
+    .grid2,.grid3{display:grid;gap:12px}.grid2{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:repeat(3,1fr)}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px;margin-right:6px}
+    table{width:100%;border-collapse:collapse;font-size:13px} td,th{padding:8px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
+    pre{white-space:pre-wrap;word-break:break-word;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:12px;overflow:auto}
+    .metric{border:1px solid #e5e7eb;border-radius:14px;padding:12px;background:#fafafa}
+    .metric .k{font-size:12px;color:#6b7280}.metric .v{font-size:24px;font-weight:700}
+    .mainGrid{display:grid;grid-template-rows:auto auto 1fr;gap:16px}
+    .graphWrap{border:1px solid #e5e7eb;border-radius:14px;padding:8px;background:#fbfdff}
+    svg{width:100%;height:420px;background:#fff}
+    .nodeObjective{fill:#dbeafe;stroke:#2563eb;stroke-width:2}.nodeConstraintNone{fill:#f3f4f6;stroke:#9ca3af}.nodeConstraintPartial{fill:#fde68a;stroke:#d97706}.nodeConstraintTotal{fill:#bbf7d0;stroke:#16a34a}.nodeResourceCovered{fill:#bfdbfe;stroke:#2563eb}.nodeResourcePending{fill:#f3f4f6;stroke:#9ca3af}
+    .edge{stroke:#cbd5e1;stroke-width:1.5}.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#374151;margin-top:8px}.sw{display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:6px}
+    iframe{width:100%;height:560px;border:1px solid #e5e7eb;border-radius:14px;background:#fff}
+    .reasonAllow{color:#166534;font-weight:700}.reasonBlock{color:#991b1b;font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="stack">
+      <div class="card">
+        <h1>MCAD Session Manager</h1>
+        <div class="muted">Hybrid mode: govern sessions, objectives, data warehouses and explainability while Pivot4J remains the OLAP execution/rending engine.</div>
+      </div>
+      <div class="card">
+        <h2>Current context</h2>
+        <div id="current"></div>
+      </div>
+      <div class="card">
+        <h2>New session</h2>
+        <div class="row"><label>Objective</label><select id="objectiveSelect"></select></div>
+        <div class="row"><label>Data warehouse</label><select id="dwSelect"></select></div>
+        <div class="grid2"><button onclick="createSession()">Create & Activate</button><button class="secondary" onclick="refreshAll()">Refresh</button></div>
+      </div>
+      <div class="card">
+        <h2>Resume existing session</h2>
+        <div class="row"><label>Session</label><select id="sessionSelect"></select></div>
+        <button onclick="resumeSession()">Resume</button>
+      </div>
+      <div class="card">
+        <h2>Last decision explainability</h2>
+        <div class="muted">Explainability is provided for both ALLOW and BLOCK decisions.</div>
+        <div id="decisionSummary"></div>
+        <pre id="lastDecision">No decision yet.</pre>
+      </div>
+    </div>
+    <div class="mainGrid">
+      <div class="card">
+        <h2>Session metrics</h2>
+        <div class="grid3" id="metricsGrid"></div>
+      </div>
+      <div class="card">
+        <h2>Objective graph (real-time completion state)</h2>
+        <div class="muted">The graph marks total/partial calculability and indicates the causal queries behind achieved parts.</div>
+        <div class="graphWrap"><svg id="graphSvg" viewBox="0 0 980 420"></svg></div>
+        <div class="legend">
+          <span><span class="sw" style="background:#dbeafe;border:1px solid #2563eb"></span>Objective</span>
+          <span><span class="sw" style="background:#f3f4f6;border:1px solid #9ca3af"></span>Constraint / none</span>
+          <span><span class="sw" style="background:#fde68a;border:1px solid #d97706"></span>Constraint / partial</span>
+          <span><span class="sw" style="background:#bbf7d0;border:1px solid #16a34a"></span>Constraint / total</span>
+          <span><span class="sw" style="background:#bfdbfe;border:1px solid #2563eb"></span>Covered resource</span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Hybrid execution area</h2>
+        <div class="muted">Use Pivot4J directly here. All queries executed through the proxy are governed by the active MCAD session.</div>
+        <iframe id="pivotFrame" src="/pivot4j/"></iframe>
+      </div>
+      <div class="card">
+        <h2>Decision history & causal trace</h2>
+        <table id="historyTable"></table>
+      </div>
+    </div>
+  </div>
+<script>
+async function j(url, opts){ const r = await fetch(url, opts); return await r.json(); }
+function esc(x){ return String(x ?? ''); }
+function fmtPct(x){ return `${(Number(x||0)*100).toFixed(1)}%`; }
+function renderCurrent(data){
+  const a = data.active || {};
+  document.getElementById('current').innerHTML = `
+    <div class="row"><span class="pill">session</span> ${esc(a.session_id || 'none')}</div>
+    <div class="row"><span class="pill">objective</span> ${esc(a.objective_id || 'none')}</div>
+    <div class="row"><span class="pill">dw</span> ${esc(a.dw_id || 'none')}</div>`;
+  const d = data.last_decision || {};
+  const cls = String(d.decision || '').toUpperCase()==='ALLOW' ? 'reasonAllow' : 'reasonBlock';
+  document.getElementById('decisionSummary').innerHTML = `<div class="row ${cls}">${esc(d.decision || '')} — ${esc(d.decision_reason_code || '')}</div><div class="muted">${esc(d.decision_reason || '')}</div>`;
+  document.getElementById('lastDecision').textContent = JSON.stringify(d, null, 2);
+}
+function renderObjectives(items){ const sel=document.getElementById('objectiveSelect'); sel.innerHTML=''; for(const it of items){ const o=document.createElement('option'); o.value=it.id; o.textContent=`${it.id} — ${it.name}`; sel.appendChild(o);} }
+function renderDW(items){ const sel=document.getElementById('dwSelect'); sel.innerHTML=''; for(const it of items){ const o=document.createElement('option'); o.value=it.id; o.textContent=`${it.id} — ${it.label}`; sel.appendChild(o);} }
+function renderSessions(items){ const sel=document.getElementById('sessionSelect'); sel.innerHTML=''; const rows=['<tr><th>Step</th><th>Decision</th><th>Reason</th><th>φ</th><th>Δφ</th><th>Query</th></tr>']; for(const it of items){ const o=document.createElement('option'); o.value=it.session_id; o.textContent=`${it.session_id} — ${it.objective_id} — ${it.dw_id}`; sel.appendChild(o);} }
+function renderMetrics(m){
+  const items = [
+    ['Completion rate', fmtPct(m.completion_rate)],
+    ['Calculability total', fmtPct(m.calculability_rate_total)],
+    ['Calculability partial', fmtPct(m.calculability_rate_partial)],
+    ['Analytic alignment score', Number(m.analytic_alignment_score||0).toFixed(3)],
+    ['ALLOW rate', fmtPct(m.allow_rate)],
+    ['ALLOW / BLOCK', `${esc(m.allow_count)} / ${esc(m.block_count)}`],
+  ];
+  document.getElementById('metricsGrid').innerHTML = items.map(([k,v])=>`<div class="metric"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+}
+function wrapText(svg, x, y, text, max){ const parts=String(text||'').split(/\s+/); let line=''; let dy=0; for(const p of parts){ const test=(line?line+' ':'')+p; if(test.length>max){ const t=document.createElementNS('http://www.w3.org/2000/svg','text'); t.setAttribute('x',x); t.setAttribute('y',y+dy); t.setAttribute('font-size','12'); t.setAttribute('text-anchor','middle'); t.textContent=line; svg.appendChild(t); line=p; dy+=14; } else line=test; } const t=document.createElementNS('http://www.w3.org/2000/svg','text'); t.setAttribute('x',x); t.setAttribute('y',y+dy); t.setAttribute('font-size','12'); t.setAttribute('text-anchor','middle'); t.textContent=line; svg.appendChild(t); }
+function renderGraph(graph){ const svg=document.getElementById('graphSvg'); svg.innerHTML=''; const nodes=graph.nodes||[]; const edges=graph.edges||[]; const objective=nodes.find(n=>n.kind==='objective'); const constraints=nodes.filter(n=>n.kind==='constraint'); const resources=nodes.filter(n=>n.kind==='resource'); const pos={}; if(objective){ pos[objective.id]={x:490,y:50}; }
+  constraints.forEach((n,i)=>{ pos[n.id]={x:180 + i*(620/Math.max(1,constraints.length-1||1)), y:170}; if(constraints.length===1) pos[n.id]={x:490,y:170}; });
+  const byConstraint={}; resources.forEach(r=>{ const parent=(edges.find(e=>e.target===r.id)||{}).source; (byConstraint[parent] ||= []).push(r); });
+  Object.entries(byConstraint).forEach(([cid, arr])=>{ arr.forEach((r,j)=>{ const c=pos[cid]||{x:490,y:170}; pos[r.id]={x:c.x-60 + j*120/Math.max(1,arr.length-1||1), y:315}; if(arr.length===1) pos[r.id]={x:c.x,y:315}; }); });
+  edges.forEach(e=>{ if(!pos[e.source]||!pos[e.target]) return; const l=document.createElementNS('http://www.w3.org/2000/svg','line'); l.setAttribute('x1',pos[e.source].x); l.setAttribute('y1',pos[e.source].y); l.setAttribute('x2',pos[e.target].x); l.setAttribute('y2',pos[e.target].y); l.setAttribute('class','edge'); svg.appendChild(l); });
+  nodes.forEach(n=>{ const p=pos[n.id]; if(!p) return; const g=document.createElementNS('http://www.w3.org/2000/svg','g'); const c=document.createElementNS('http://www.w3.org/2000/svg','circle'); c.setAttribute('cx',p.x); c.setAttribute('cy',p.y); c.setAttribute('r', n.kind==='objective'?34:(n.kind==='constraint'?28:22)); let cls='nodeObjective'; if(n.kind==='constraint'){ cls = n.status==='total' ? 'nodeConstraintTotal' : (n.status==='partial' ? 'nodeConstraintPartial' : 'nodeConstraintNone'); } if(n.kind==='resource'){ cls = n.status==='covered' ? 'nodeResourceCovered' : 'nodeResourcePending'; } c.setAttribute('class',cls); const title=document.createElementNS('http://www.w3.org/2000/svg','title'); title.textContent = `${n.label}
+status=${n.status||''}
+${n.description||''}
+${(n.causal||[]).map(x=>`step ${x.step_index}: ${x.query_digest||''}`).join('
+')}`; c.appendChild(title); g.appendChild(c); svg.appendChild(g); wrapText(svg,p.x,p.y+4,n.label,16); }); }
+function renderHistory(items){ const rows=['<tr><th>Step</th><th>Decision</th><th>Reason</th><th>φ</th><th>Δφ</th><th>Useful part / query</th></tr>'];
+  for(const it of items){ rows.push(`<tr><td>${esc(it.step_index)}</td><td>${esc(it.decision)}</td><td><strong>${esc(it.decision_reason_code)}</strong><br><span class="muted">${esc(it.decision_reason)}</span></td><td>${Number(it.phi||0).toFixed(3)}</td><td>${Number(it.delta_phi_t||0).toFixed(3)}</td><td><div><span class="pill">new total</span> ${esc((it.newly_contributed_constraints_total||[]).join(', ')||'-')}</div><div><span class="pill">new partial</span> ${esc((it.newly_contributed_constraints_partial||[]).join(', ')||'-')}</div><div><span class="pill">resources</span> ${esc((it.gained_resource_ids||[]).join(', ')||'-')}</div><div class="muted">${esc((it.mdx||'').slice(0,160))}</div></td></tr>`);} document.getElementById('historyTable').innerHTML=rows.join(''); }
+async function refreshAll(){
+  renderCurrent(await j('/mcad/session/current'));
+  const objs = await j('/mcad/objectives'); renderObjectives(objs.items || []);
+  const dws = await j('/mcad/datawarehouses'); renderDW((dws.items||[]).filter(x=>x.enabled!==false));
+  const sess = await j('/mcad/sessions'); const items=sess.items||[]; const sel=document.getElementById('sessionSelect'); sel.innerHTML=''; for(const it of items){ const o=document.createElement('option'); o.value=it.session_id; o.textContent=`${it.session_id} — ${it.objective_id} — ${it.dw_id}`; sel.appendChild(o);} 
+  const cur = await j('/mcad/session/current'); const sid = (cur.active||{}).session_id; if(sid){ const hist = await j('/mcad/history/current'); renderHistory(hist.items||[]); const gg = await j('/mcad/graph/current'); renderMetrics(gg.metrics||{}); renderGraph(gg.graph||{nodes:[],edges:[]}); } else { renderHistory([]); renderMetrics({}); renderGraph({nodes:[],edges:[]}); }
+}
+async function createSession(){ const objective_id=document.getElementById('objectiveSelect').value; const dw_id=document.getElementById('dwSelect').value || 'foodmart'; await j('/mcad/session/new', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({objective_id,dw_id})}); await refreshAll(); alert('New MCAD session created and activated.'); }
+async function resumeSession(){ const session_id=document.getElementById('sessionSelect').value; await j('/mcad/session/resume', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({session_id})}); await refreshAll(); alert('Existing MCAD session resumed.'); }
+refreshAll(); setInterval(refreshAll, 4000);
+</script>
+</body>
+</html>
