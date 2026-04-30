@@ -175,9 +175,38 @@ def _decision_from_eval(
     ceval_constraints_partial: List[str],
     gained_resource_ids: List[str],
     clauses: List[SATClauseResult],
+    diagnostics: Optional[Dict[str, Any]] = None,
 ) -> tuple[str, str, str, bool, bool, List[str]]:
     failed = [str(c.name) for c in clauses if not bool(c.ok)]
+    diagnostics = dict(diagnostics or {})
     if not sat:
+        if bool(diagnostics.get("measure_not_targeted")):
+            return (
+                "BLOCK",
+                "BLOCK_MEASURE_NOT_TARGETED",
+                "Query uses resources/measures that are not targeted by the active objective.",
+                False,
+                False,
+                failed,
+            )
+        if bool(diagnostics.get("grain_mismatch")):
+            return (
+                "BLOCK",
+                "BLOCK_GRAIN_MISMATCH",
+                "Query grain is incompatible with the objective target grain.",
+                False,
+                False,
+                failed,
+            )
+        if bool(diagnostics.get("scope_conflict")):
+            return (
+                "BLOCK",
+                "BLOCK_OUT_OF_OBJECTIVE_SCOPE",
+                "Query conflicts with objective scope constraints (context/slicer/time incompatibility).",
+                False,
+                False,
+                failed,
+            )
         if failed:
             return (
                 "BLOCK",
@@ -248,6 +277,86 @@ def _decision_from_eval(
         False,
         failed,
     )
+
+
+def _norm_token(value: Any) -> str:
+    return "".join(str(value or "").lower().split())
+
+
+def _dim_key(dim: str) -> str:
+    d = _norm_token(dim).replace("_", "")
+    if "salesterritory" in d or "territory" in d:
+        if "region" in d:
+            return "region"
+    if d.startswith("time") or d.startswith("date") or d.startswith("calendar"):
+        if "year" in d:
+            return "year"
+        if "quarter" in d:
+            return "quarter"
+        if "month" in d:
+            return "month"
+        if "day" in d:
+            return "day"
+    if "region" in d:
+        return "region"
+    if "category" in d:
+        return "category"
+    if "subcategory" in d:
+        return "subcategory"
+    if "storestate" in d:
+        return "storestate"
+    return d
+
+
+def _extract_diagnostics(objective: Any, qp: Dict[str, Any], clauses: List[SATClauseResult]) -> Dict[str, Any]:
+    qspec = dict(qp.get("query_spec") or qp or {})
+    query_measures = {_norm_token(m) for m in (qspec.get("measures") or qp.get("measures") or []) if str(m).strip()}
+    query_group_by = {_dim_key(x) for x in (qspec.get("group_by") or qp.get("group_by") or []) if str(x).strip()}
+    query_slicers = {_dim_key(k): _norm_token(v) for k, v in (qspec.get("slicers") or qp.get("slicers") or {}).items()}
+
+    objective_measures: set[str] = set()
+    objective_grains: set[str] = set()
+    objective_slicer_values: Dict[str, set[str]] = {}
+    for c in list(getattr(objective, "constraints", []) or []):
+        for nv in list(getattr(c, "virtual_nodes", []) or []):
+            objective_measures.add(_norm_token(getattr(nv, "measure", "")))
+            for g in list(getattr(nv, "grain", []) or []):
+                objective_grains.add(_dim_key(str(g)))
+            for dk, dv in dict(getattr(nv, "slicers", {}) or {}).items():
+                key = _dim_key(str(dk))
+                objective_slicer_values.setdefault(key, set()).add(_norm_token(str(dv)))
+
+    measure_not_targeted = bool(query_measures) and bool(objective_measures) and query_measures.isdisjoint(objective_measures)
+    # Conservative grain mismatch: only classify when none of the query group-by levels
+    # intersect any objective-supported grain level. This avoids over-classifying mixed/extended
+    # group-bys as mismatch and keeps fallback to BLOCK_SAT_FALSE when uncertain.
+    grain_mismatch = bool(query_group_by) and bool(objective_grains) and query_group_by.isdisjoint(objective_grains)
+    scope_conflict = False
+    for dk, qv in query_slicers.items():
+        allowed = objective_slicer_values.get(dk)
+        if allowed and qv not in allowed:
+            scope_conflict = True
+            break
+
+    has_query_scope_filters = bool(query_slicers) or bool(
+        qspec.get("window_start")
+        or qspec.get("window_end")
+        or qspec.get("time_members")
+        or qp.get("window_start")
+        or qp.get("window_end")
+        or qp.get("time_members")
+    )
+    failed = {str(c.name) for c in clauses if not bool(c.ok)}
+    if not scope_conflict and has_query_scope_filters and ("slc_ok" in failed or "time_ok" in failed):
+        scope_conflict = True
+    if not grain_mismatch and query_group_by and "grain_ok" in failed and not measure_not_targeted:
+        grain_mismatch = True
+
+    return {
+        "measure_not_targeted": measure_not_targeted,
+        "grain_mismatch": grain_mismatch,
+        "scope_conflict": scope_conflict,
+    }
 
 
 def evaluate_with_objective_and_session(
@@ -385,7 +494,15 @@ def evaluate_with_objective_and_session(
         )
         SESSION_STORE.register_evidence(payload.session_id, retained_evidence_id, snapshot_id=retained_snapshot_id)
 
-    decision, decision_reason_code, decision_reason, is_redundant, has_marginal_gain, failed_predicates = _decision_from_eval(sat, ceval_constraints_total, ceval_constraints_partial, gained_resource_ids, clauses)
+    diagnostics = _extract_diagnostics(objective, qp, clauses)
+    decision, decision_reason_code, decision_reason, is_redundant, has_marginal_gain, failed_predicates = _decision_from_eval(
+        sat,
+        ceval_constraints_total,
+        ceval_constraints_partial,
+        gained_resource_ids,
+        clauses,
+        diagnostics=diagnostics,
+    )
     explanation_id = f"EXPL_{payload.session_id}_t{step_idx:03d}_{query_digest[:8]}"
     ckg_snapshot_id = retained_snapshot_id or pre_snapshot_id
     ckg_snapshot_path = retained_snapshot_path or pre_snapshot_path
