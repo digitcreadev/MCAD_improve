@@ -1,0 +1,26 @@
+datawarehouses:
+- id: foodmart
+  label: FoodMart
+  type: mondrian
+  catalog: FoodMart
+  cube: Sales
+  xmla_url: http://emondrian:8080/emondrian/xmla
+  enabled: true
+  notes: Default sample warehouse for FoodMart / Sales cube.
+- id: adventureworks
+  label: Adventure Works
+  type: mondrian
+  catalog: Adventure Works
+  cube: Adventure Works Sales
+  xmla_url: http://emondrian:8080/emondrian/xmla
+  enabled: true
+  notes: Adventure Works warehouse aligned with the Adventure Works Sales cube used
+    by objectives and tests.
+- id: external_template
+  label: External DW Template
+  type: xmla
+  catalog: YOUR_CATALOG
+  cube: YOUR_CUBE
+  xmla_url: https://example.org/xmla
+  enabled: false
+  notes: Duplicate and adapt this entry to register an external warehouse.

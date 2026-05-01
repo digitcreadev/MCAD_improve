@@ -1,7 +1,9 @@
 objectives:
 - id: OHF_NORD
   name: Health Food Nord 1998
-  description: 'Objectif stratégique illustratif aligné sur l''article MCAD : suivre la marge, les ruptures et la croissance du chiffre d''affaires pour la catégorie Health Food en région Nord en 1998, avec comparaison à 1997 pour la croissance.'
+  description: 'Objectif stratégique illustratif aligné sur l''article MCAD : suivre
+    la marge, les ruptures et la croissance du chiffre d''affaires pour la catégorie
+    Health Food en région Nord en 1998, avec comparaison à 1997 pour la croissance.'
   kpis:
   - KPI_MARGIN_RATE
   - KPI_STOCKOUT_RATE
@@ -51,7 +53,8 @@ objectives:
       window_end: '1998-12-31'
   - id: c3
     kpi_id: KPI_CA_GROWTH
-    description: Croissance du chiffre d'affaires Health Food / Nord entre 1997 et 1998 supérieure ou égale à 5%.
+    description: Croissance du chiffre d'affaires Health Food / Nord entre 1997 et
+      1998 supérieure ou égale à 5%.
     weight: 1.0
     requirement_sets:
     - - NV_CA_HF_NORTH_1997_MONTH
@@ -87,7 +90,9 @@ objectives:
       window_end: '1998-12-31'
 - id: OAW_BIKES_EUROPE
   name: AdventureWorks Bikes Europe 2013
-  description: 'Second objectif inter-dataset pour l''évaluation MCAD : suivre la marge, les retours et la croissance des ventes pour la catégorie Bikes en Europe sur AdventureWorks, avec comparaison 2012-2013 pour la croissance.'
+  description: 'Second objectif inter-dataset pour l''évaluation MCAD : suivre la
+    marge, les retours et la croissance des ventes pour la catégorie Bikes en Europe
+    sur AdventureWorks, avec comparaison 2012-2013 pour la croissance.'
   kpis:
   - KPI_AW_MARGIN_RATE
   - KPI_AW_RETURN_RATE
@@ -137,7 +142,8 @@ objectives:
       window_end: '2013-12-31'
   - id: aw_c3
     kpi_id: KPI_AW_SALES_GROWTH
-    description: Croissance des ventes Bikes / Europe entre 2012 et 2013 supérieure ou égale à 8%.
+    description: Croissance des ventes Bikes / Europe entre 2012 et 2013 supérieure
+      ou égale à 8%.
     weight: 1.0
     requirement_sets:
     - - NV_AW_SALES_BIKES_EUROPE_2012_MONTH
@@ -173,7 +179,11 @@ objectives:
       window_end: '2013-12-31'
 - id: O_REAL_BEER_WA_MONTH
   name: BI real Beer and Wine WA monthly
-  description: Objectif temporaire de test pour le mode BI réel, aligné sur le cube Mondrian effectivement exposé dans Pivot4J. Il sert à vérifier qu'une requête mensuelle Store Sales / Profit sur Beer and Wine dans l'état WA est reconnue comme contributive, alors que les variantes CA, autres catégories, autres mesures ou grains plus grossiers sont bloquées.
+  description: Objectif temporaire de test pour le mode BI réel, aligné sur le cube
+    Mondrian effectivement exposé dans Pivot4J. Il sert à vérifier qu'une requête
+    mensuelle Store Sales / Profit sur Beer and Wine dans l'état WA est reconnue comme
+    contributive, alors que les variantes CA, autres catégories, autres mesures ou
+    grains plus grossiers sont bloquées.
   kpis:
   - KPI_REAL_STORE_SALES
   - KPI_REAL_PROFIT
@@ -216,3 +226,325 @@ objectives:
       slicers:
         Product.Product Category: Beer and Wine
         Store.Store State: WA
+- id: OFM_HEALTHFOOD_NORTH_COVERAGE_1998
+  name: FoodMart Health Food North coverage 1998
+  description: Objectif FoodMart multi-ressources sur Health Food en région North
+    en 1998 pour ventes, marge et ruptures avec contraintes de grain complémentaires.
+  kpis:
+  - KPI_FM_HF_SALES
+  - KPI_FM_HF_MARGIN
+  - KPI_FM_HF_STOCKOUT
+  constraints:
+  - id: fm_hf_n_c1
+    kpi_id: KPI_FM_HF_SALES
+    description: Store Sales Health Food/North/1998 au mois.
+    weight: 1.0
+    requirement_sets:
+    - - NV_FM_HF_N_1998_SALES_MONTH
+    virtual_nodes:
+    - id: NV_FM_HF_N_1998_SALES_MONTH
+      fact: Sales
+      grain:
+      - Time.Month
+      - Product.Category
+      measure: Store Sales
+      aggregator: SUM
+      unit: CURRENCY
+      slicers:
+        Product.Category: Health Food
+        Store.Region: North
+        Time.Year: '1998'
+      window_start: '1998-01-01'
+      window_end: '1998-12-31'
+  - id: fm_hf_n_c2
+    kpi_id: KPI_FM_HF_MARGIN
+    description: Margin% Health Food/North/1998 au mois.
+    weight: 1.0
+    requirement_sets:
+    - - NV_FM_HF_N_1998_MARGIN_MONTH
+    virtual_nodes:
+    - id: NV_FM_HF_N_1998_MARGIN_MONTH
+      fact: Sales
+      grain:
+      - Time.Month
+      - Product.Category
+      measure: Margin%
+      aggregator: AVG
+      unit: PERCENT
+      slicers:
+        Product.Category: Health Food
+        Store.Region: North
+        Time.Year: '1998'
+      window_start: '1998-01-01'
+      window_end: '1998-12-31'
+  - id: fm_hf_n_c3
+    kpi_id: KPI_FM_HF_STOCKOUT
+    description: StockoutRate Health Food/North/1998 au grain magasin.
+    weight: 1.0
+    requirement_sets:
+    - - NV_FM_HF_N_1998_STOCKOUT_STORE
+    virtual_nodes:
+    - id: NV_FM_HF_N_1998_STOCKOUT_STORE
+      fact: Sales
+      grain:
+      - Store.Store
+      - Product.Category
+      measure: StockoutRate
+      aggregator: AVG
+      unit: PERCENT
+      slicers:
+        Product.Category: Health Food
+        Store.Region: North
+        Time.Year: '1998'
+      window_start: '1998-01-01'
+      window_end: '1998-12-31'
+- id: OFM_BEER_WA_SALES_PROFIT_GROWTH_9798
+  name: FoodMart Beer and Wine WA sales-profit growth
+  description: Objectif FoodMart sur Beer and Wine / WA combinant ventes, profit et
+    croissance 1997-1998 au grain mensuel.
+  kpis:
+  - KPI_FM_BW_SALES
+  - KPI_FM_BW_PROFIT
+  - KPI_FM_BW_GROWTH
+  constraints:
+  - id: fm_bw_c1
+    kpi_id: KPI_FM_BW_SALES
+    description: Store Sales Beer and Wine/WA/1998 au mois.
+    weight: 1.0
+    requirement_sets:
+    - - NV_FM_BW_WA_1998_SALES_MONTH
+    virtual_nodes:
+    - id: NV_FM_BW_WA_1998_SALES_MONTH
+      fact: Sales
+      grain:
+      - Time.Month
+      - Product.Product Category
+      - Store.Store State
+      measure: Store Sales
+      aggregator: SUM
+      unit: CURRENCY
+      slicers:
+        Product.Product Category: Beer and Wine
+        Store.Store State: WA
+        Time.Year: '1998'
+      window_start: '1998-01-01'
+      window_end: '1998-12-31'
+  - id: fm_bw_c2
+    kpi_id: KPI_FM_BW_PROFIT
+    description: Profit Beer and Wine/WA/1998 au mois.
+    weight: 1.0
+    requirement_sets:
+    - - NV_FM_BW_WA_1998_PROFIT_MONTH
+    virtual_nodes:
+    - id: NV_FM_BW_WA_1998_PROFIT_MONTH
+      fact: Sales
+      grain:
+      - Time.Month
+      - Product.Product Category
+      - Store.Store State
+      measure: Profit
+      aggregator: SUM
+      unit: CURRENCY
+      slicers:
+        Product.Product Category: Beer and Wine
+        Store.Store State: WA
+        Time.Year: '1998'
+      window_start: '1998-01-01'
+      window_end: '1998-12-31'
+  - id: fm_bw_c3
+    kpi_id: KPI_FM_BW_GROWTH
+    description: Croissance Store Sales Beer and Wine/WA entre 1997 et 1998.
+    weight: 1.0
+    requirement_sets:
+    - - NV_FM_BW_WA_1997_SALES_MONTH
+      - NV_FM_BW_WA_1998_SALES_MONTH
+    virtual_nodes:
+    - id: NV_FM_BW_WA_1997_SALES_MONTH
+      fact: Sales
+      grain:
+      - Time.Month
+      - Product.Product Category
+      - Store.Store State
+      measure: Store Sales
+      aggregator: SUM
+      unit: CURRENCY
+      slicers:
+        Product.Product Category: Beer and Wine
+        Store.Store State: WA
+        Time.Year: '1997'
+      window_start: '1997-01-01'
+      window_end: '1997-12-31'
+    - id: NV_FM_BW_WA_1998_SALES_MONTH
+      fact: Sales
+      grain:
+      - Time.Month
+      - Product.Product Category
+      - Store.Store State
+      measure: Store Sales
+      aggregator: SUM
+      unit: CURRENCY
+      slicers:
+        Product.Product Category: Beer and Wine
+        Store.Store State: WA
+        Time.Year: '1998'
+      window_start: '1998-01-01'
+      window_end: '1998-12-31'
+- id: OAW_BIKES_EUROPE_MULTIRESOURCE_2013
+  name: AdventureWorks Bikes Europe multi-resource 2013
+  description: Objectif AdventureWorks sur Bikes/Europe/2013 avec ventes, marge et
+    retours sur grains complémentaires.
+  kpis:
+  - KPI_AW_BIKE_SALES
+  - KPI_AW_BIKE_MARGIN
+  - KPI_AW_BIKE_RETURN
+  constraints:
+  - id: aw_bike_eu_c1
+    kpi_id: KPI_AW_BIKE_SALES
+    description: Sales Amount Bikes/Europe/2013 au mois.
+    weight: 1.0
+    requirement_sets:
+    - - NV_AW_BIKE_EU_2013_SALES_MONTH
+    virtual_nodes:
+    - id: NV_AW_BIKE_EU_2013_SALES_MONTH
+      fact: Adventure Works Sales
+      grain:
+      - Date.Month
+      - Product.Category
+      measure: Sales Amount
+      aggregator: SUM
+      unit: CURRENCY
+      slicers:
+        Product.Category: Bikes
+        SalesTerritory.Region: Europe
+        Date.Year: '2013'
+      window_start: '2013-01-01'
+      window_end: '2013-12-31'
+  - id: aw_bike_eu_c2
+    kpi_id: KPI_AW_BIKE_MARGIN
+    description: Gross Margin% Bikes/Europe/2013 au mois.
+    weight: 1.0
+    requirement_sets:
+    - - NV_AW_BIKE_EU_2013_MARGIN_MONTH
+    virtual_nodes:
+    - id: NV_AW_BIKE_EU_2013_MARGIN_MONTH
+      fact: Adventure Works Sales
+      grain:
+      - Date.Month
+      - Product.Category
+      measure: Gross Margin%
+      aggregator: AVG
+      unit: PERCENT
+      slicers:
+        Product.Category: Bikes
+        SalesTerritory.Region: Europe
+        Date.Year: '2013'
+      window_start: '2013-01-01'
+      window_end: '2013-12-31'
+  - id: aw_bike_eu_c3
+    kpi_id: KPI_AW_BIKE_RETURN
+    description: ReturnRate Bikes/Europe/2013 au grain reseller.
+    weight: 1.0
+    requirement_sets:
+    - - NV_AW_BIKE_EU_2013_RETURN_RESELLER
+    virtual_nodes:
+    - id: NV_AW_BIKE_EU_2013_RETURN_RESELLER
+      fact: Adventure Works Sales
+      grain:
+      - Reseller.Reseller
+      - Product.Category
+      measure: ReturnRate
+      aggregator: AVG
+      unit: PERCENT
+      slicers:
+        Product.Category: Bikes
+        SalesTerritory.Region: Europe
+        Date.Year: '2013'
+      window_start: '2013-01-01'
+      window_end: '2013-12-31'
+- id: OAW_BIKES_PACIFIC_GROWTH_2012_2013
+  name: AdventureWorks Bikes Pacific growth 2012-2013
+  description: Objectif AdventureWorks sur Bikes/Pacific avec ventes 2013, marge 2013
+    et croissance ventes 2012-2013.
+  kpis:
+  - KPI_AW_BIKE_PAC_SALES
+  - KPI_AW_BIKE_PAC_MARGIN
+  - KPI_AW_BIKE_PAC_GROWTH
+  constraints:
+  - id: aw_bike_pac_c1
+    kpi_id: KPI_AW_BIKE_PAC_SALES
+    description: Sales Amount Bikes/Pacific/2013 au mois.
+    weight: 1.0
+    requirement_sets:
+    - - NV_AW_BIKE_PAC_2013_SALES_MONTH
+    virtual_nodes:
+    - id: NV_AW_BIKE_PAC_2013_SALES_MONTH
+      fact: Adventure Works Sales
+      grain:
+      - Date.Month
+      - Product.Category
+      measure: Sales Amount
+      aggregator: SUM
+      unit: CURRENCY
+      slicers:
+        Product.Category: Bikes
+        SalesTerritory.Region: Pacific
+        Date.Year: '2013'
+      window_start: '2013-01-01'
+      window_end: '2013-12-31'
+  - id: aw_bike_pac_c2
+    kpi_id: KPI_AW_BIKE_PAC_MARGIN
+    description: Gross Margin% Bikes/Pacific/2013 au mois.
+    weight: 1.0
+    requirement_sets:
+    - - NV_AW_BIKE_PAC_2013_MARGIN_MONTH
+    virtual_nodes:
+    - id: NV_AW_BIKE_PAC_2013_MARGIN_MONTH
+      fact: Adventure Works Sales
+      grain:
+      - Date.Month
+      - Product.Category
+      measure: Gross Margin%
+      aggregator: AVG
+      unit: PERCENT
+      slicers:
+        Product.Category: Bikes
+        SalesTerritory.Region: Pacific
+        Date.Year: '2013'
+      window_start: '2013-01-01'
+      window_end: '2013-12-31'
+  - id: aw_bike_pac_c3
+    kpi_id: KPI_AW_BIKE_PAC_GROWTH
+    description: Croissance Sales Amount Bikes/Pacific entre 2012 et 2013.
+    weight: 1.0
+    requirement_sets:
+    - - NV_AW_BIKE_PAC_2012_SALES_MONTH
+      - NV_AW_BIKE_PAC_2013_SALES_MONTH
+    virtual_nodes:
+    - id: NV_AW_BIKE_PAC_2012_SALES_MONTH
+      fact: Adventure Works Sales
+      grain:
+      - Date.Month
+      - Product.Category
+      measure: Sales Amount
+      aggregator: SUM
+      unit: CURRENCY
+      slicers:
+        Product.Category: Bikes
+        SalesTerritory.Region: Pacific
+        Date.Year: '2012'
+      window_start: '2012-01-01'
+      window_end: '2012-12-31'
+    - id: NV_AW_BIKE_PAC_2013_SALES_MONTH
+      fact: Adventure Works Sales
+      grain:
+      - Date.Month
+      - Product.Category
+      measure: Sales Amount
+      aggregator: SUM
+      unit: CURRENCY
+      slicers:
+        Product.Category: Bikes
+        SalesTerritory.Region: Pacific
+        Date.Year: '2013'
+      window_start: '2013-01-01'
+      window_end: '2013-12-31'
